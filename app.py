@@ -95,7 +95,7 @@ def get_recommendation():
     """
 
     payload = {
-        "model": "llama-3-70b-8192",
+        "model": "llama-3.3-70b-versatile",  # Make sure this is the right model name!
         "messages": [
             {"role": "system", "content": "You are a healthcare advisor AI."},
             {"role": "user", "content": user_message}
@@ -114,10 +114,17 @@ def get_recommendation():
     try:
         response = requests.post(GROQ_URL, headers=headers, json=payload)
         data = response.json()
-        reply = data['choices'][0]['message']['content']
-        st.session_state.recommendation = reply
+
+        if 'choices' in data:
+            reply = data['choices'][0]['message']['content']
+            st.session_state.recommendation = reply
+        else:
+            error_message = data.get('error', {}).get('message', 'Unknown error from AI service.')
+            st.error(f"❌ AI Error: {error_message}")
+            st.session_state.recommendation = None
+
     except Exception as e:
-        st.error(f"❌ Failed to fetch recommendation: {e}")
+        st.error(f"❌ Failed to contact AI service: {e}")
         st.session_state.recommendation = None
 
 # Main App Logic
