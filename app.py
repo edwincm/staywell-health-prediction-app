@@ -132,17 +132,22 @@ st.subheader("📝 Fill or Randomize 7-Day Activity Data")
 
 days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
-# Form-like input
-for day in range(NUM_DAYS):
-    cols = st.columns(len(FEATURES) + 1)
-    cols[0].markdown(f"**{days_of_week[day]}**")
-    for idx, feature in enumerate(FEATURES):
-        st.session_state.week_data[day, idx] = cols[idx + 1].number_input(
-            label=feature,
-            value=float(st.session_state.week_data[day, idx]),
-            step=1.0,
-            key=f"{feature}_{day}"
-        )
+# Prepare a DataFrame for editable table
+week_df = pd.DataFrame(
+    st.session_state.week_data,
+    columns=[f.replace('_', ' ').title() for f in FEATURES],
+    index=days_of_week
+)
+
+edited_df = st.data_editor(
+    week_df,
+    use_container_width=True,
+    hide_index=False,
+    num_rows="fixed",
+)
+
+# Update session state with edited values
+st.session_state.week_data = edited_df.values
 
 # Action buttons
 col1, col2, col3 = st.columns(3)
