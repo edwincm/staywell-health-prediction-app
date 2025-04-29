@@ -148,7 +148,7 @@ with col1:
 with col2:
     if st.button("🧹 Clear Form"):
         clear_week_data()
-        st.experimental_rerun()
+        st.rerun()
 
 with col3:
     if st.button("✅ Predict Health Status"):
