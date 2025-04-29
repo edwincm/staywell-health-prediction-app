@@ -1,0 +1,259 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Health Status Prediction</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f7f9fc;
+        }
+    
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+    
+        th, td {
+            padding: 8px;
+            text-align: center;
+            white-space: nowrap;
+        }
+    
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+    
+        td input {
+            width: 100px;
+            text-align: center;
+        }
+    
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    
+        .buttons-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+    
+        .predict-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+        }
+    
+        .randomize-btn {
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+        }
+    
+        .clear-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+        }
+    
+        button:hover {
+            opacity: 0.85;
+            cursor: pointer;
+        }
+
+        /* Glowing prediction box */
+        .prediction {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px auto 0 auto;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 15px;
+            width: fit-content;
+            border-radius: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        .healthy {
+            background-color: #d4edda;
+            color: #155724;
+            box-shadow: 0 0 10px #28a745, 0 0 20px #28a745, 0 0 30px #28a745;
+        }
+
+        .at-risk {
+            background-color: #f8d7da;
+            color: #721c24;
+            box-shadow: 0 0 10px #dc3545, 0 0 20px #dc3545, 0 0 30px #dc3545;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <h1>7-Day Activity Input</h1>
+    
+    {% set days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] %}
+    <form method="POST">
+        <div class="table-wrapper">
+            <table border="1" cellpadding="5">
+                <tr>
+                    <th>Day</th>
+                    {% for feature in features %}
+                        <th>{{ feature }}</th>
+                    {% endfor %}
+                </tr>
+                {% for day in range(7) %}
+                <tr>
+                    <td>{{ days[day] }}</td>
+                    {% for feature in features %}
+                        <td>
+                            <input 
+                                type="number" 
+                                step="any" 
+                                id="{{ feature }}_{{ day }}"
+                                name="{{ feature }}_{{ day }}" 
+                                value="{% if random_data %}{{ random_data[day][loop.index0] }}{% endif %}"
+                                required
+                            >
+                        </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        <br>
+
+        <div class="buttons-container">
+            <button type="submit" name="action" value="predict" class="predict-btn">Predict</button>
+            <button type="button" class="randomize-btn" onclick="randomizeData()">Randomize</button>
+            <button type="button" class="clear-btn" onclick="clearForm()">Clear Form</button>
+        </div>
+    </form>
+
+    {% if prediction %}
+        <div class="prediction {% if prediction == 'Healthy' %}healthy{% else %}at-risk{% endif %}">
+            Prediction: {{ prediction }}
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <button id="recommend-btn" type="button" onclick="getRecommendation()">Get Lifestyle Recommendations</button>
+        </div>
+    
+        <div id="recommendation" style="margin-top: 20px; text-align: center;"></div>
+    {% endif %}
+
+    <script>
+        function randomizeData() {
+            const minMaxWeekday = {
+                steps: [3000, 10000],
+                distance_km: [2, 7],
+                calories: [1800, 3000],
+                very_active_minutes: [10, 60],
+                moderately_active_minutes: [20, 100],
+                lightly_active_minutes: [60, 300],
+                sedentary_minutes: [600, 1200]
+            };
+        
+            const minMaxWeekend = {
+                steps: [7000, 18000],
+                distance_km: [5, 15],
+                calories: [2000, 3500],
+                very_active_minutes: [30, 120],
+                moderately_active_minutes: [40, 150],
+                lightly_active_minutes: [100, 300],
+                sedentary_minutes: [400, 1000]
+            };
+        
+            const features = ["steps", "distance_km", "calories", "very_active_minutes", "moderately_active_minutes", "lightly_active_minutes", "sedentary_minutes"];
+        
+            for (let day = 0; day < 7; day++) {
+                // Assume day 5 (Saturday) and 6 (Sunday) are weekends
+                const isWeekend = (day === 5 || day === 6);
+                const minMax = isWeekend ? minMaxWeekend : minMaxWeekday;
+        
+                features.forEach(feature => {
+                    const fieldId = `${feature}_${day}`;
+                    const [minVal, maxVal] = minMax[feature];
+                    const randomValue = (Math.random() * (maxVal - minVal) + minVal).toFixed(2);  // 2 decimals
+                    document.getElementById(fieldId).value = randomValue;
+                });
+            }
+        }
+
+        function clearForm() {
+            const features = ["steps", "distance_km", "calories", "very_active_minutes", "moderately_active_minutes", "lightly_active_minutes", "sedentary_minutes"];
+            
+            for (let day = 0; day < 7; day++) {
+                features.forEach(feature => {
+                    const fieldId = `${feature}_${day}`;
+                    document.getElementById(fieldId).value = "";
+                });
+            }
+        }
+
+        async function getRecommendation() {
+            const recommendBtn = document.getElementById("recommend-btn");
+            const aiResponse = document.getElementById("recommendation");
+            aiResponse.innerText = ""; // Clear previous response
+
+            // Disable button and show spinner
+            recommendBtn.disabled = true;
+            recommendBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...`;
+
+            const features = ["steps", "distance_km", "calories", "very_active_minutes", "moderately_active_minutes", "lightly_active_minutes", "sedentary_minutes"];
+            const inputData = {};
+
+            for (let day = 0; day < 7; day++) {
+                features.forEach(feature => {
+                    const fieldId = `${feature}_${day}`;
+                    const inputField = document.getElementById(fieldId);
+                    if (inputField) {
+                        inputData[fieldId] = parseFloat(inputField.value) || 0;
+                    }
+                });
+            }
+
+            try {
+                const response = await fetch("/recommend", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(inputData)
+                });
+
+                const data = await response.json();
+                aiResponse.innerText = data.reply || "No response.";
+            } catch (error) {
+                aiResponse.innerText = "⚠️ Error contacting AI service.";
+            }
+
+            // Re-enable button
+            recommendBtn.disabled = false;
+            recommendBtn.innerHTML = "Get AI Recommendation";
+        }
+        </script>
+</body>
+</html>

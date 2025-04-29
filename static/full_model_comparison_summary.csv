@@ -1,0 +1,7 @@
+Model,Test Accuracy,Healthy Precision,Healthy Recall,Healthy F1-Score
+Baseline CNN-LSTM,95.08,83.33,90.91,86.96
+Lower LR CNN-LSTM,95.08,83.33,90.91,86.96
+Augmented CNN-LSTM,91.8,80.0,72.73,76.19
+Logistic Regression,98.36,100.0,90.91,95.24
+Random Forest,98.36,100.0,90.91,95.24
+Gradient Boosting,98.36,100.0,90.91,95.24
