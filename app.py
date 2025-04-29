@@ -143,7 +143,7 @@ col1, col2, col3 = st.columns(3)
 with col1:
     if st.button("🔄 Randomize"):
         randomize_week_data()
-        st.experimental_rerun()
+        st.rerun()
 
 with col2:
     if st.button("🧹 Clear Form"):
