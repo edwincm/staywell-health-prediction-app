@@ -1,6 +1,7 @@
 # app.py
 import streamlit as st
 import numpy as np
+import pandas as pd
 import pickle
 import random
 import requests
